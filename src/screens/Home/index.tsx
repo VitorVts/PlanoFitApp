@@ -40,17 +40,19 @@ const Home = () => {
   const handleNext = () => {
     const { isValid, errors } = validateForm();
 
-    if (isValid) {
-      setStep((prev) => Math.min(prev + 1, totalSteps - 1));
-      setErrors(Array(labels.length).fill(""));
-    } else {
+    if (!isValid) {
       setErrors((prevErrors) => {
         const newErrors = [...prevErrors];
         newErrors[step] = errors[0];
+
         return newErrors;
       });
+
       return;
     }
+
+    setStep((prev) => Math.min(prev + 1, totalSteps - 1));
+    setErrors(Array(labels.length).fill(""));
   };
 
   const handlePrev = () => setStep((prev) => Math.max(prev - 1, 0));
@@ -83,8 +85,7 @@ const Home = () => {
       altura: z
         .string()
         .refine(
-          (val) =>
-            !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 3,
+          (val) => !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 3,
           "A altura deve ser um número entre 1.00 e 3.00 m."
         ),
       peso: z
@@ -130,24 +131,27 @@ const Home = () => {
     setValues(newValues);
   };
 
+  const toMask = (
+    mask: string,
+    value: string,
+    precision?: number,
+    format?: string
+  ) => {
+    return MaskService.toMask("custom", value, {
+      mask: mask,
+      precision: precision,
+      format: format,
+    });
+  };
   const applyMask = (value: string) => {
     if (currentLabel === "Data de Nascimento? (DD/MM/YYYY)") {
-      return MaskService.toMask("datetime", value, {
-        mask: "99/99/9999",
-        format: "DD/MM/YYYY",
-      });
+      return toMask("99/99/9999", value, undefined, "DD/MM/YYYY");
     }
-    if (currentLabel === "Qual é a sua altura (Metros)?") {
-      return MaskService.toMask("custom", value, {
-        mask: "9.99",
-        precision: 1,
-      });
+    if (currentLabel === "Qual é a sua altura (em cm)?") {
+      return toMask("9.99", value, 1);
     }
     if (currentLabel === "Qual é o seu peso (em kg)?") {
-      return MaskService.toMask("custom", value, {
-        mask: "99.99",
-        precision: 2,
-      });
+      return toMask("99.99", value, 2);
     }
     return value;
   };
